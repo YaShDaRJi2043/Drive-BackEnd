@@ -9,7 +9,7 @@ const {
 //user Register(signup) with form
 usersRouter.post("/userRegister", userRegister);
 
-//user Register(signup) with google
+// user Register(signup) with google
 usersRouter.post("/googleUserRegister", googleUserRegister);
 
 // user Login
