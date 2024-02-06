@@ -3,39 +3,56 @@ const userDatas = require("../../models/userSchema");
 
 // store user data (Post)
 exports.usersPicsDataPost = async (req, res) => {
-  const { Email, pics } = req.body;
+  const { Email, pics, fileName, fileType, fileSize, fileTime } = req.body;
   try {
-    const verifyUser = await userDatas.findOne({ Email: Email });
-    const verifyUser2 = await userDatas.findOne({ email: Email });
+    const verifyUser = await mainData.findOne({ Email });
 
-    if (verifyUser || verifyUser2) {
-      const userData = await mainData.findOne({ Email: Email });
-
+    if (verifyUser) {
       if (pics !== "") {
-        if (userData) {
-          // If user exists, update the 'photos' array
-          userData.photos.push({ pics });
+        // Calculate the total size of existing photos
+        let totalSize = 0;
+        verifyUser.photos.forEach((photo) => {
+          totalSize += parseFloat(photo.fileSize);
+        });
 
-          const finalPicData = await userData.save();
-          res.status(200).json({ status: 200, finalPicData, message: "Done" });
-        } else {
-          // If user doesn't exist, create a new entry
-          const usersPicDetails = new mainData({
-            Email,
-            photos: [{ pics }],
-          });
+        // If user exists, update the 'photos' array
+        verifyUser.photos.push({
+          pics,
+          fileName,
+          fileType,
+          fileSize,
+          fileTime,
+        });
 
-          const finalPicData = await usersPicDetails.save();
-          res.status(200).json({ status: 200, finalPicData, message: "Done" });
-        }
+        // Update totalSize with the size of the new photo
+        totalSize += parseFloat(fileSize);
+        const fixed = totalSize.toFixed(2);
+
+        // Update totalSize in the database
+        verifyUser.totalSize = fixed.toString();
+
+        const finalPicData = await verifyUser.save();
+        res.status(200).json({ status: 200, finalPicData, message: "Done" });
       } else {
-        res.status(400).json({ status: 400, message: "pls select img" });
+        res
+          .status(400)
+          .json({ status: 400, message: "Please select an image" });
       }
     } else {
-      res.status(400).json({ status: 400, message: "user not found" });
+      // If user doesn't exist, create a new entry
+      const usersPicDetails = new mainData({
+        Email,
+        photos: [{ pics, fileName, fileType, fileSize, fileTime }],
+        totalSize: fileSize,
+      });
+
+      const finalPicData = await usersPicDetails.save();
+      res.status(200).json({ status: 200, finalPicData, message: "Done" });
     }
   } catch (error) {
-    res.status(404).json({ status: 404, message: "users Data can not store" });
+    res
+      .status(404)
+      .json({ status: 404, message: "Users Data could not be stored" });
   }
 };
 
@@ -53,7 +70,7 @@ exports.usersPicsDataGet = async (req, res) => {
     } else if (verifyUser2) {
       res.status(200).json(verifyUser2);
     } else {
-      res.status(404).json({ status: 404, message: "Data not availabe" });
+      res.status(404).json({ status: 404, message: "Data not available" });
     }
   } catch (error) {
     res.status(404).json({ status: 404, message: "users Data can not show" });

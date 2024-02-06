@@ -11,8 +11,24 @@ const usersPicDataSchema = new mongoose.Schema({
       pics: {
         type: String,
       },
+      fileName: {
+        type: String,
+      },
+      fileType: {
+        type: String,
+      },
+      fileSize: {
+        type: String,
+      },
+      fileTime: {
+        type: String,
+      },
     },
   ],
+
+  totalSize: {
+    type: String,
+  },
 });
 
 const mainData = new mongoose.model("storages", usersPicDataSchema);
