@@ -23,6 +23,9 @@ const usersPicDataSchema = new mongoose.Schema({
       fileTime: {
         type: String,
       },
+      isStar: {
+        type: Boolean,
+      },
     },
   ],
 

@@ -1,9 +1,9 @@
 const mainData = require("../../models/usersPicDataSchema");
-const userDatas = require("../../models/userSchema");
 
 // store user data (Post)
 exports.usersPicsDataPost = async (req, res) => {
-  const { Email, pics, fileName, fileType, fileSize, fileTime } = req.body;
+  const { Email, pics, fileName, fileType, fileSize, fileTime, isStar } =
+    req.body;
   try {
     const verifyUser = await mainData.findOne({ Email });
 
@@ -22,6 +22,7 @@ exports.usersPicsDataPost = async (req, res) => {
           fileType,
           fileSize,
           fileTime,
+          isStar: false,
         });
 
         // Update totalSize with the size of the new photo
@@ -42,7 +43,9 @@ exports.usersPicsDataPost = async (req, res) => {
       // If user doesn't exist, create a new entry
       const usersPicDetails = new mainData({
         Email,
-        photos: [{ pics, fileName, fileType, fileSize, fileTime }],
+        photos: [
+          { pics, fileName, fileType, fileSize, fileTime, isStar: false },
+        ],
         totalSize: fileSize,
       });
 
@@ -56,6 +59,7 @@ exports.usersPicsDataPost = async (req, res) => {
   }
 };
 
+// Get api of user photos
 exports.usersPicsDataGet = async (req, res) => {
   const Email = req.query.email;
   try {
@@ -74,5 +78,62 @@ exports.usersPicsDataGet = async (req, res) => {
     }
   } catch (error) {
     res.status(404).json({ status: 404, message: "users Data can not show" });
+  }
+};
+
+// update value of isStar in mainData collection
+exports.changeIsStarredValue = async (req, res) => {
+  const email = req.query.email;
+  const id = req.query.id;
+
+  try {
+    const userData = await mainData.findOne({ Email: email });
+
+    if (userData) {
+      const pics = userData.photos;
+      const pic = pics.find((p) => p._id.toString() === id);
+
+      if (pic) {
+        // Toggle the value of isStar
+        pic.isStar = !pic.isStar;
+
+        // Save the updated userData
+        await userData.save();
+
+        res.status(200).json({
+          status: 200,
+          message: "isStar value toggled successfully",
+          updatedUserData: userData,
+        });
+      } else {
+        res.status(404).json({ status: 404, message: "Photo not found" });
+      }
+    } else {
+      res.status(404).json({ status: 404, message: "User not found" });
+    }
+  } catch (error) {
+    res.status(404).json({ status: 404, message: "Internal Server Error" });
+  }
+};
+
+// get Starred Data(pic)
+exports.usersStaredPicsDataGet = async (req, res) => {
+  const Email = req.query.email;
+  try {
+    const userData = await mainData.findOne({ Email: Email });
+
+    if (userData) {
+      const filteredPhotos = userData.photos.filter((photo) => photo.isStar);
+
+      if (filteredPhotos.length > 0) {
+        res.status(200).json(filteredPhotos);
+      } else {
+        res.status(404).json({ status: 404, message: "No photos found" });
+      }
+    } else {
+      res.status(404).json({ status: 404, message: "User data not found" });
+    }
+  } catch (error) {
+    res.status(404).json({ status: 404, message: "Internal Server Error" });
   }
 };
