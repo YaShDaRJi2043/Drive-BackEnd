@@ -5,6 +5,7 @@ const {
   usersPicsDataGet,
   changeIsStarredValue,
   usersStaredPicsDataGet,
+  usersResentPicsDataGet,
 } = require("../controllers/usersPicsData/usersPicDataController");
 
 // insert pic
@@ -20,5 +21,7 @@ userpic.get("/displayStarredImg", usersStaredPicsDataGet);
 
 // update value of isStar in mainData collection
 userpic.put("/changeValueOfIsStar", changeIsStarredValue);
+
+userpic.get("/displayRecentImg", usersResentPicsDataGet);
 
 module.exports = userpic;

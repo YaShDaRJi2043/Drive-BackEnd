@@ -120,10 +120,22 @@ exports.changeIsStarredValue = async (req, res) => {
 exports.usersStaredPicsDataGet = async (req, res) => {
   const Email = req.query.email;
   try {
+    // google id
     const userData = await mainData.findOne({ Email: Email });
+
+    // form id
+    const userData2 = await mainData.findOne({ email: Email });
 
     if (userData) {
       const filteredPhotos = userData.photos.filter((photo) => photo.isStar);
+
+      if (filteredPhotos.length > 0) {
+        res.status(200).json(filteredPhotos);
+      } else {
+        res.status(404).json({ status: 404, message: "No photos found" });
+      }
+    } else if (userData2) {
+      const filteredPhotos = userData2.photos.filter((photo) => photo.isStar);
 
       if (filteredPhotos.length > 0) {
         res.status(200).json(filteredPhotos);
@@ -135,5 +147,53 @@ exports.usersStaredPicsDataGet = async (req, res) => {
     }
   } catch (error) {
     res.status(404).json({ status: 404, message: "Internal Server Error" });
+  }
+};
+
+// Recent Uploaded Pic
+exports.usersResentPicsDataGet = async (req, res) => {
+  const Email = req.query.email;
+  try {
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+
+    // Fetch data with photos from the last 7 days
+    // google id
+    const verifyUser = await mainData.find(
+      {
+        Email: Email,
+        photos: {
+          $elemMatch: { fileTime: { $gte: sevenDaysAgo.toISOString() } },
+        },
+      },
+      { "photos.$": 1 }
+    );
+
+    // form id
+    const verifyUser2 = await mainData.find(
+      {
+        email: Email,
+        photos: {
+          $elemMatch: { fileTime: { $gte: sevenDaysAgo.toISOString() } },
+        },
+      },
+      { "photos.$": 1 }
+    );
+
+    if (verifyUser && verifyUser.length > 0) {
+      res.status(200).json(verifyUser);
+    } else if (verifyUser2 && verifyUser2.length > 0) {
+      res.status(200).json(verifyUser2);
+    } else {
+      res.status(404).json({
+        status: 404,
+        message: "Data not available in the last 7 days",
+      });
+    }
+  } catch (error) {
+    res
+      .status(404)
+      .json({ status: 404, message: "Users data can not be shown" });
   }
 };
