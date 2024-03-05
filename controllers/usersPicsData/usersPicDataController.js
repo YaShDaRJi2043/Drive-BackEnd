@@ -2,55 +2,63 @@ const mainData = require("../../models/usersPicDataSchema");
 
 // store user data (Post)
 exports.usersPicsDataPost = async (req, res) => {
-  const { Email, pics, fileName, fileType, fileSize, fileTime, isStar } =
-    req.body;
+  const { Email, pics, fileName, fileType, fileSize, fileTime } = req.body;
   try {
-    const verifyUser = await mainData.findOne({ Email });
+    if (
+      !Email == "" &&
+      !pics == "" &&
+      !fileName == "" &&
+      !fileType == "" &&
+      !fileSize == "" &&
+      !fileTime == ""
+    ) {
+      const verifyUser = await mainData.findOne({ Email });
 
-    if (verifyUser) {
-      if (pics !== "") {
-        // Calculate the total size of existing photos
-        let totalSize = 0;
-        verifyUser.photos.forEach((photo) => {
-          totalSize += parseFloat(photo.fileSize);
-        });
+      if (verifyUser) {
+        if (pics !== "") {
+          // Calculate the total size of existing photos
+          let totalSize = 0;
+          verifyUser.photos.forEach((photo) => {
+            totalSize += parseFloat(photo.fileSize);
+          });
 
-        // If user exists, update the 'photos' array
-        verifyUser.photos.push({
-          pics,
-          fileName,
-          fileType,
-          fileSize,
-          fileTime,
-          isStar: false,
-        });
+          // If user exists, update the 'photos' array
+          verifyUser.photos.push({
+            pics,
+            fileName,
+            fileType,
+            fileSize,
+            fileTime,
+            isStar: false,
+          });
 
-        // Update totalSize with the size of the new photo
-        totalSize += parseFloat(fileSize);
-        const fixed = totalSize.toFixed(2);
+          // Update totalSize with the size of the new photo
+          totalSize += parseFloat(fileSize);
+          const fixed = totalSize.toFixed(2);
 
-        // Update totalSize in the database
-        verifyUser.totalSize = fixed.toString();
+          // Update totalSize in the database
+          verifyUser.totalSize = fixed.toString();
 
-        const finalPicData = await verifyUser.save();
-        res.status(200).json({ status: 200, finalPicData, message: "Done" });
+          const finalPicData = await verifyUser.save();
+          res.status(200).json({ status: 200, finalPicData, message: "Done" });
+        } else {
+          res
+            .status(400)
+            .json({ status: 400, message: "Please select an image" });
+        }
       } else {
-        res
-          .status(400)
-          .json({ status: 400, message: "Please select an image" });
-      }
-    } else {
-      // If user doesn't exist, create a new entry
-      const usersPicDetails = new mainData({
-        Email,
-        photos: [
-          { pics, fileName, fileType, fileSize, fileTime, isStar: false },
-        ],
-        totalSize: fileSize,
-      });
+        // If user doesn't exist, create a new entry
+        const usersPicDetails = new mainData({
+          Email,
+          photos: [
+            { pics, fileName, fileType, fileSize, fileTime, isStar: false },
+          ],
+          totalSize: fileSize,
+        });
 
-      const finalPicData = await usersPicDetails.save();
-      res.status(200).json({ status: 200, finalPicData, message: "Done" });
+        const finalPicData = await usersPicDetails.save();
+        res.status(200).json({ status: 200, finalPicData, message: "Done" });
+      }
     }
   } catch (error) {
     res
