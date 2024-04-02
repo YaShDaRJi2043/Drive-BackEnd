@@ -7,7 +7,6 @@ const SECRETKEY = process.env.SECRETKEY;
 // user login
 exports.userLogin = async (req, res) => {
   const { Email, Password } = req.body;
-  ``;
   try {
     if (!Email || !Password) {
       res.status(404).json({ status: 404, message: "Fill All The Details" });

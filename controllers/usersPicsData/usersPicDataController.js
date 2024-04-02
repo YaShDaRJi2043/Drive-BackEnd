@@ -168,26 +168,20 @@ exports.usersResentPicsDataGet = async (req, res) => {
 
     // Fetch data with photos from the last 7 days
     // google id
-    const verifyUser = await mainData.find(
-      {
-        Email: Email,
-        photos: {
-          $elemMatch: { fileTime: { $gte: sevenDaysAgo.toISOString() } },
-        },
+    const verifyUser = await mainData.find({
+      Email: Email,
+      photos: {
+        $elemMatch: { fileTime: { $gte: sevenDaysAgo.toISOString() } },
       },
-      { "photos.$": 1 }
-    );
+    });
 
     // form id
-    const verifyUser2 = await mainData.find(
-      {
-        email: Email,
-        photos: {
-          $elemMatch: { fileTime: { $gte: sevenDaysAgo.toISOString() } },
-        },
+    const verifyUser2 = await mainData.find({
+      email: Email,
+      photos: {
+        $elemMatch: { fileTime: { $gte: sevenDaysAgo.toISOString() } },
       },
-      { "photos.$": 1 }
-    );
+    });
 
     if (verifyUser && verifyUser.length > 0) {
       res.status(200).json(verifyUser);
@@ -203,5 +197,65 @@ exports.usersResentPicsDataGet = async (req, res) => {
     res
       .status(404)
       .json({ status: 404, message: "Users data can not be shown" });
+  }
+};
+
+// Delete Photo
+exports.deletePhotoFromMainPage = async (req, res) => {
+  const { email, id } = req.query;
+  try {
+    // Find the user by email
+    const user = await mainData.findOne({ Email: email });
+    const user2 = await mainData.findOne({ email: email });
+    if (user) {
+      // Find the photo to be deleted
+      const photoToDelete = user.photos.find(
+        (photo) => photo._id.toString() === id
+      );
+      if (!photoToDelete) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+
+      // Update the total size by subtracting the size of the deleted photo
+      user.totalSize = (
+        parseFloat(user.totalSize) - parseFloat(photoToDelete.fileSize)
+      ).toFixed(2);
+
+      // Remove the photo from the photos array
+      user.photos = user.photos.filter((photo) => photo._id.toString() !== id);
+
+      // Save the updated user object
+      await user.save();
+
+      res.status(200).json({ message: "Photo deleted successfully" });
+    } else if (user2) {
+      // Find the photo to be deleted
+      const photoToDelete = user2.photos.find(
+        (photo) => photo._id.toString() === id
+      );
+      if (!photoToDelete) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+
+      // Update the total size by subtracting the size of the deleted photo
+      user2.totalSize = (
+        parseFloat(user2.totalSize) - parseFloat(photoToDelete.fileSize)
+      ).toFixed(2);
+
+      // Remove the photo from the photos array
+      user2.photos = user2.photos.filter(
+        (photo) => photo._id.toString() !== id
+      );
+
+      // Save the updated user object
+      await user2.save();
+
+      res.status(200).json({ message: "Photo deleted successfully" });
+    } else {
+      return res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
