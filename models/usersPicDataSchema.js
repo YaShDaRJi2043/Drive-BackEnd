@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const usersPicDataSchema = new mongoose.Schema({
-  Email: {
+  email: {
     type: String,
     required: true,
   },
