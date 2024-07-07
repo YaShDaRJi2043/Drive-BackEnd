@@ -1,3 +1,4 @@
+const { json } = require("express");
 const mainData = require("../../models/usersPicDataSchema");
 
 // store user data (Post)
@@ -36,11 +37,19 @@ exports.usersPicsDataPost = async (req, res) => {
           totalSize += parseFloat(fileSize);
           const fixed = totalSize.toFixed(2);
 
-          // Update totalSize in the database
-          verifyUser.totalSize = fixed.toString();
+          if (fixed > 10) {
+            res
+              .status(400)
+              .json({ status: 400, message: "Not Enough Space!!" });
+          } else {
+            // Update totalSize in the database
+            verifyUser.totalSize = fixed.toString();
 
-          const finalPicData = await verifyUser.save();
-          res.status(200).json({ status: 200, finalPicData, message: "Done" });
+            const finalPicData = await verifyUser.save();
+            res
+              .status(200)
+              .json({ status: 200, finalPicData, message: "Done" });
+          }
         } else {
           res
             .status(400)
@@ -105,7 +114,7 @@ exports.changeIsStarredValue = async (req, res) => {
 
         res.status(200).json({
           status: 200,
-          message: "isStar value toggled successfully",
+          message: "Image Star value Change successfully",
           updatedUserData: userData,
         });
       } else {
